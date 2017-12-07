@@ -13,13 +13,19 @@ Renderer = require './Renderer'
 TileSource = require './TileSource'
 utils = require './utils'
 config = require './config'
+fs = require 'fs'
 
 module.exports = class Mapscii
   width: null
   height: null
   canvas: null
   mouse: null
-
+  
+  sourceLat: null
+  sourceLon: null
+  destinationLat: null
+  destinationLon: null
+ 
   mouseDragging: false
   mousePosition:
     x: 0, y: 0
@@ -33,8 +39,9 @@ module.exports = class Mapscii
     # iceland lat: 64.124229, lon: -21.811552
     # rgbg
     # lat: 49.019493, lon: 12.098341
-    lat: 52.51298, lon: 13.42012
-
+    lat: 35.7340, lon: 51.42018
+    # Saina: 35.7340541,51.4201809
+    # lat: 35.7340541, lon: 51.4201809
   minZoom: null
 
   constructor: (options) ->
@@ -55,7 +62,7 @@ module.exports = class Mapscii
 
     .then =>
       @_draw()
-      .then => @notify("Welcome to MapSCII! Use your cursors to navigate, a/z to zoom, q to quit.")
+      .then => @notify("press s to set source, d to set dest, a/z to zoom, q to quit.")
 
   _initTileSource: ->
     @tileSource = new TileSource()
@@ -171,6 +178,8 @@ module.exports = class Mapscii
           process.exit 0
 
       when "a" then @zoomBy config.zoomStep
+      when "s" then @setSource("set source")
+      when "d" then @setDestination("set destination")
       when "z", "y"
         @zoomBy -config.zoomStep
 
@@ -201,8 +210,8 @@ module.exports = class Mapscii
   _getFooter: ->
     # tile = utils.ll2tile @center.lon, @center.lat, @zoom
     # "tile: #{utils.digits tile.x, 3}, #{utils.digits tile.x, 3}   "+
-
-    "center: #{utils.digits @center.lat, 3}, #{utils.digits @center.lon, 3}   "+
+    "source: #{utils.digits @sourceLat, 3}, #{utils.digits @sourceLon, 3}   "+
+    "destination: #{utils.digits @destinationLat, 3}, #{utils.digits @destinationLon, 3}   "+
     "zoom: #{utils.digits @zoom, 2}   "+
     "mouse: #{utils.digits @mousePosition.lat, 3}, #{utils.digits @mousePosition.lon, 3} "
 
@@ -212,6 +221,16 @@ module.exports = class Mapscii
 
   _write: (output) ->
     config.output.write output
+  
+  setSource: (msg) ->
+    @sourceLat = @mousePosition.lat
+    @sourceLon = @mousePosition.lon
+
+  setDestination: (msg) ->
+    @destinationLat = @mousePosition.lat
+    @destinationLon = @mousePosition.lon
+    fs.writeFile "/home/vahid/.config/snapp-cli/path.csv", "#{utils.digits @sourceLat, 6}, #{utils.digits @sourceLon, 6}\n#{utils.digits @destinationLat, 6}, #{utils.digits @destinationLon, 6}\n", (error) ->
+      console.error("Error writing file", error) if error 
 
   zoomBy: (step) ->
     return @zoom = @minZoom if @zoom+step < @minZoom

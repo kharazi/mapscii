@@ -9,7 +9,7 @@ module.exports =
 
   styleFile: __dirname+"/../styles/dark.json"
 
-  initialZoom: null
+  initialZoom: 10
   maxZoom: 18
   zoomStep: 0.2
 
